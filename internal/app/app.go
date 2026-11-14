@@ -64,6 +64,11 @@ func Start(config *Config) {
 
 func handler(handle auth.RouteHandler) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/healthz" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		aud := strings.TrimPrefix(req.URL.Path, "/")
 		if len(aud) > 0 {
 			// Handle /:aud
@@ -71,6 +76,7 @@ func handler(handle auth.RouteHandler) func(w http.ResponseWriter, req *http.Req
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		// No audience means a misconfigured forwardAuth address: deny instead of letting everyone through.
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }

@@ -1,0 +1,34 @@
+name: Build image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    # GitHub-hosted on purpose: this is a public fork, and pull requests from strangers must never reach the
+    # self-hosted runners in our cluster.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Flux picks the newest image by the trailing run number: main-<sha>-<run>.
+      - name: Compute tag
+        id: tag
+        run: echo "tag=main-${GITHUB_SHA::7}-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/dna-football/kani:${{ steps.tag.outputs.tag }}
