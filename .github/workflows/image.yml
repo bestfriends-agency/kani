@@ -31,4 +31,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/dna-football/kani:${{ steps.tag.outputs.tag }}
+          tags: ghcr.io/${{ github.repository_owner }}/kani:${{ steps.tag.outputs.tag }}
